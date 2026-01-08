@@ -242,15 +242,20 @@ app.post('/api/generate', authenticateToken, async (req, res) => {
     }
 });
 
+// --- Middleware: Global Request Logger ---
+app.use((req, res, next) => {
+    if (!req.path.startsWith('/api')) {
+        console.log(`[Request] ${req.method} ${req.path}`);
+    }
+    next();
+});
+
 // --- Serve Static Frontend (Production Only) ---
 console.log('Enabling static file serving from:', distPath);
 app.use(express.static(distPath));
 
-// Final catch-all: Serve index.html for any request that hasn't been handled (React SPA)
+// Final catch-all: Serve index.html for navigation
 app.use((req, res) => {
-    // Log missed requests
-    console.log(`[Static Fallback] Request: ${req.method} ${req.path}`);
-
     // Only handle GET requests for navigation
     if (req.method !== 'GET') return res.status(404).end();
 
@@ -259,7 +264,15 @@ app.use((req, res) => {
         return res.status(404).json({ error: 'API route not found' });
     }
 
-    // Check if index.html exists before sending
+    // IMPORTANT: If the request looks like a file (has an extension) 
+    // and we reached this fallback, it means express.static MISSED it.
+    // Do NOT serve index.html for missing assets!
+    if (req.path.includes('.') && !req.path.endsWith('.html')) {
+        console.warn(`[Static Missing] 404 for asset: ${req.path}`);
+        return res.status(404).end();
+    }
+
+    // Otherwise, serve the frontend app (index.html)
     const indexPath = path.join(distPath, 'index.html');
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
