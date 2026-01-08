@@ -232,21 +232,24 @@ app.post('/api/generate', authenticateToken, async (req, res) => {
 });
 
 // --- Serve Static Frontend (Production Only) ---
-// We assume 'npm run build' was run and 'dist' folder exists
 const distPath = path.join(__dirname, 'dist');
+console.log('Serving static files from:', distPath);
 app.use(express.static(distPath));
 
-// Catch-all route to serve index.html for React SPA
 // Final catch-all: Serve index.html for any request that hasn't been handled (React SPA)
 app.use((req, res) => {
-    // Only serve index.html if it's not an API request
-    if (!req.path.startsWith('/api')) {
-        res.sendFile(path.join(distPath, 'index.html'));
-    } else {
-        res.status(404).json({ error: 'API route not found' });
+    // Only handle GET requests for navigation
+    if (req.method !== 'GET') return res.status(404).end();
+
+    // If it is an API request that wasn't handled, return 404
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'API route not found' });
     }
+
+    // Otherwise, serve the frontend app
+    res.sendFile(path.join(distPath, 'index.html'));
 });
 
 app.listen(port, () => {
-    console.log(`Server running at port ${port}`);
+    console.log(`Server is running on port ${port}`);
 });
