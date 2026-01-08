@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImagiStory - Interactive Story Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="logo">
+                <h1>Imagi<span>Story</span></h1>
+                <p>Craft your odyssey by picking images</p>
+            </div>
+            <div class="header-actions">
+                <button id="restart-btn" class="btn btn-secondary" style="display: none;">Restart</button>
+            </div>
+        </header>
+
+        <main>
+            <section id="story-viewer" class="story-section">
+                <div class="story-container">
+                    <div id="story-content" class="story-content">
+                        <div class="welcome-msg">
+                            <h2>Start Your Journey</h2>
+                            <p>Select an image from the gallery below to begin your narrative.</p>
+                        </div>
+                    </div>
+                    <div id="selection-sequence" class="selection-sequence">
+                        <!-- Selected images will appear here as thumbnails -->
+                    </div>
+                    <div class="story-controls" id="story-controls" style="display: none;">
+                        <button id="end-story-btn" class="btn btn-primary">End Story</button>
+                        <button id="share-story-btn" class="btn btn-accent">Share Story</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="gallery-section" class="gallery-section">
+                <div class="section-header">
+                    <h3>Inspiration Gallery</h3>
+                    <p id="gallery-status">Choose your next chapter...</p>
+                </div>
+                <div id="image-gallery" class="image-gallery">
+                    <!-- Images will be injected here -->
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 ImagiStory. Powered by Your Imagination.</p>
+        </footer>
+
+        <!-- Share Modal (Optional/Hidden for now) -->
+        <div id="share-overlay" class="overlay" style="display: none;">
+            <div class="modal">
+                <h3>Share Your Tale</h3>
+                <div id="full-story-text" class="full-story-text"></div>
+                <div class="modal-actions">
+                    <button id="copy-text-btn" class="btn btn-primary">Copy to Clipboard</button>
+                    <button id="close-modal-btn" class="btn btn-secondary">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
