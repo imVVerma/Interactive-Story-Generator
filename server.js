@@ -8,10 +8,21 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Verification: Check if dist folder exists
+const distPath = path.join(__dirname, 'dist');
+if (fs.existsSync(distPath)) {
+    console.log('✅ Dist folder found at:', distPath);
+    const files = fs.readdirSync(distPath);
+    console.log('📦 Files in dist:', files);
+} else {
+    console.warn('❌ Dist folder NOT found at:', distPath);
+}
 
 dotenv.config();
 
@@ -232,12 +243,14 @@ app.post('/api/generate', authenticateToken, async (req, res) => {
 });
 
 // --- Serve Static Frontend (Production Only) ---
-const distPath = path.join(__dirname, 'dist');
-console.log('Serving static files from:', distPath);
+console.log('Enabling static file serving from:', distPath);
 app.use(express.static(distPath));
 
 // Final catch-all: Serve index.html for any request that hasn't been handled (React SPA)
 app.use((req, res) => {
+    // Log missed requests
+    console.log(`[Static Fallback] Request: ${req.method} ${req.path}`);
+
     // Only handle GET requests for navigation
     if (req.method !== 'GET') return res.status(404).end();
 
@@ -246,8 +259,13 @@ app.use((req, res) => {
         return res.status(404).json({ error: 'API route not found' });
     }
 
-    // Otherwise, serve the frontend app
-    res.sendFile(path.join(distPath, 'index.html'));
+    // Check if index.html exists before sending
+    const indexPath = path.join(distPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(404).send('Frontend build not found (index.html missing)');
+    }
 });
 
 app.listen(port, () => {
