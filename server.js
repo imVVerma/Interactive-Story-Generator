@@ -237,10 +237,13 @@ const distPath = path.join(__dirname, 'dist');
 app.use(express.static(distPath));
 
 // Catch-all route to serve index.html for React SPA
-app.get('(.*)', (req, res) => {
+// Final catch-all: Serve index.html for any request that hasn't been handled (React SPA)
+app.use((req, res) => {
     // Only serve index.html if it's not an API request
     if (!req.path.startsWith('/api')) {
         res.sendFile(path.join(distPath, 'index.html'));
+    } else {
+        res.status(404).json({ error: 'API route not found' });
     }
 });
 
