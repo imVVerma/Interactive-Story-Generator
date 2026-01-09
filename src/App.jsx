@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useDropzone } from 'react-dropzone';
 import { analyzeImageSafety, generateStorySegment, loginUser, registerUser, saveUserKey, getUserInfo } from './services/AiService';
-import { User, LogOut, Settings, Key, Lock, Mail, Eye, EyeOff } from 'lucide-react';
+import { User, LogOut, Settings, Key, Lock, Mail, Eye, EyeOff, ArrowRight, Trash2, ShieldCheck, Upload, Download, Share2 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import confetti from 'canvas-confetti';
 
