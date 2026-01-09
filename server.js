@@ -81,23 +81,27 @@ const authenticateToken = (req, res, next) => {
 app.post('/api/auth/register', async (req, res) => {
     const { email, password } = req.body;
     try {
+        console.log(`[Auth] Attempting registration for: ${email}`);
         const hashedPassword = await bcrypt.hash(password, 10);
         const result = await pool.query(
             'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email',
             [email, hashedPassword]
         );
+        console.log(`[Auth] Registration successful for: ${email}`);
         res.status(201).json(result.rows[0]);
     } catch (err) {
+        console.error('[Auth Error] Registration failed:', err);
         if (err.code === '23505') {
             return res.status(400).json({ error: 'Email already exists' });
         }
-        res.status(500).json({ error: 'Registration failed' });
+        res.status(500).json({ error: `Registration failed: ${err.message}` });
     }
 });
 
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     try {
+        console.log(`[Auth] Attempting login for: ${email}`);
         const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (result.rows.length === 0) return res.status(400).json({ error: 'User not found' });
 
@@ -108,6 +112,7 @@ app.post('/api/auth/login', async (req, res) => {
         const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
         res.json({ token, email: user.email, hasKey: !!user.encrypted_gemini_key });
     } catch (err) {
+        console.error('[Auth Error] Login internal error:', err);
         res.status(500).json({ error: 'Login failed' });
     }
 });
