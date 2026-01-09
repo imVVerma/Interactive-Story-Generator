@@ -227,15 +227,21 @@ app.post('/api/generate', authenticateToken, async (req, res) => {
         const model = await getGeminiModel(req.user.id);
 
         const prompt = `
-            Act as a travel journalist. Write a 2-3 sentence narrative based on:
-            - Subject: ${metadata.subject}
-            - Mood: ${metadata.sentiment}
+            You are a creative storyteller and travel enthusiast. Write a deeply personal, relatable, and evocative travel journal entry (2-3 sentences) based on this photo metadata:
+            - Focus: ${metadata.subject}
+            - Mood/Atmosphere: ${metadata.sentiment}
             - Lighting: ${metadata.lighting}
-            - Labels: ${(metadata.labels || []).join(', ')}
-            - Tone: ${tone}
-            - Context: ${previousContext || "Start of the trip."}
+            - Key Elements: ${(metadata.labels || []).join(', ')}
+            - Desired Tone: ${tone}
+            - Journey so far: ${previousContext || "The journey begins."}
 
-            Return ONLY the story text.
+            Guidelines:
+            1. Write in the FIRST PERSON ("I" or "We").
+            2. Do NOT just list the elements. Instead, weave the lighting and mood into a natural experience (e.g., instead of "The lighting is golden," say "The afternoon sun cast a warm, honey-like glow over...").
+            3. Connect this moment to the "Journey so far" to ensure a cohesive story.
+            4. Focus on the EMOTION and the SENSES (what it felt like to be there).
+            
+            Return ONLY the narrative text.
         `;
 
         const result = await model.generateContent(prompt);
