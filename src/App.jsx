@@ -34,10 +34,10 @@ const App = () => {
             fetchUserProfile();
         }
 
-        // 2. Handle Supabase OAuth Redirects
-        const handleOAuthRedirect = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
+        // 2. Listen for Auth Changes (Handles Google OAuth Redirects & Logins)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user && !token) {
+                console.log('[Auth] Google Session detected, syncing...');
                 try {
                     const data = await syncGoogleUser(session.user.email);
                     localStorage.setItem('token', data.token);
@@ -47,19 +47,6 @@ const App = () => {
                 } catch (err) {
                     setError('Failed to sync Google account');
                 }
-            }
-        };
-
-        handleOAuthRedirect();
-
-        // 3. Listen for Auth Changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'SIGNED_IN' && session?.user) {
-                const data = await syncGoogleUser(session.user.email);
-                localStorage.setItem('token', data.token);
-                setToken(data.token);
-                setHasKey(data.hasKey);
-                setIsAuthOpen(false);
             }
         });
 

@@ -121,19 +121,20 @@ app.post('/api/auth/google-sync', async (req, res) => {
     const { email } = req.body;
     try {
         console.log(`[Auth] Google Sync for: ${email}`);
-        // Check if user exists
-        let result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
 
-        if (result.rows.length === 0) {
-            // Auto-register google user
-            result = await pool.query(
-                'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, encrypted_gemini_key',
-                [email, 'OAUTH_USER'] // Dummy hash for OAuth users
-            );
-            console.log(`[Auth] Created new record for Google user: ${email}`);
-        }
+        // Atomic UPSERT: Insert if not exists, otherwise return existing.
+        // We use ON CONFLICT (email) DO UPDATE to ensure we always get a RETURNING result
+        const query = `
+            INSERT INTO users (email, password_hash) 
+            VALUES ($1, $2)
+            ON CONFLICT (email) 
+            DO UPDATE SET email = EXCLUDED.email 
+            RETURNING id, email, encrypted_gemini_key
+        `;
 
+        const result = await pool.query(query, [email, 'OAUTH_USER']);
         const user = result.rows[0];
+
         const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
         res.json({ token, email: user.email, hasKey: !!user.encrypted_gemini_key });
     } catch (err) {
