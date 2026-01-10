@@ -23,7 +23,7 @@ export const signInWithGoogle = async () => {
         options: {
             redirectTo: window.location.origin,
             queryParams: {
-                prompt: 'select_account', // This forces Google to show the account picker
+                prompt: 'select_account consent', // Force both account picker AND consent screen
                 access_type: 'offline'
             }
         }

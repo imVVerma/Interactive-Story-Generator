@@ -97,22 +97,20 @@ const App = () => {
     };
 
     const handleLogout = async () => {
-        // Clear local state FIRST to stop the UI from reloading auth
+        // Clear local state FIRST
         localStorage.removeItem('token');
         setToken(null);
         setUser(null);
 
-        // Then tell Supabase to sign out (clears cookies/session)
+        // Then tell Supabase to sign out
         try {
             await supabase.auth.signOut();
         } catch (e) {
             console.error('[Auth] SignOut error:', e);
         }
 
-        setIsAuthOpen(true);
-        setStep('upload');
-        setImages([]);
-        setStory([]);
+        // Hard reload to ensure all internal Supabase/App state is totally reset
+        window.location.reload();
     };
 
     const handleSaveKey = async (e) => {
@@ -304,8 +302,12 @@ const App = () => {
                             <User size={14} className="text-primary" />
                             <span className="text-sm font-medium text-slate-300">{user.email.split('@')[0]}</span>
                         </div>
-                        <button onClick={handleLogout} className="p-2 text-muted hover:text-red-400 transition-colors">
-                            <LogOut size={20} />
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl transition-all font-bold text-sm"
+                        >
+                            <LogOut size={16} />
+                            Logout
                         </button>
                     </div>
                 )}
@@ -533,9 +535,9 @@ const App = () => {
 
                             <button
                                 onClick={handleGoogleLogin}
-                                className="w-full bg-white text-slate-900 hover:bg-slate-200 py-2.5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2.5 transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
+                                className="w-full bg-white text-slate-900 hover:bg-slate-200 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-xl hover:shadow-primary/20 active:scale-[0.98]"
                             >
-                                <svg className="w-4 h-4" viewBox="0 0 24 24">
+                                <svg className="w-6 h-6" viewBox="0 0 24 24">
                                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
