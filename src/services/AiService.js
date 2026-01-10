@@ -3,9 +3,54 @@
  * Communicates with the proxy server for Auth, Settings, and AI generation.
  */
 
+import { createClient } from '@supabase/supabase-js';
+
 const API_BASE_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:3001/api'
-    : '/api'; // In production, we assume the frontend is served from the same domain or proxied
+    : '/api';
+
+// Initialize Supabase Client
+const SUPABASE_URL = 'https://geueapflyepyuxfluhrx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWVhcGZseWVweXV4Zmx1aHJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc3OTcwMzEsImV4cCI6MjA4MzM3MzAzMX0.DbenDkizSQ_1XnEJWTibmKVNVQ-bv4xsuoD7kt9XYMg';
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/**
+ * Google OAuth: Sign In
+ */
+export const signInWithGoogle = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: window.location.origin
+        }
+    });
+    if (error) throw error;
+    return data;
+};
+
+/**
+ * Google OAuth: Sign Out
+ */
+export const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+};
+
+/**
+ * Sync Google User with Backend
+ */
+export const syncGoogleUser = async (email) => {
+    const response = await fetch(`${API_BASE_URL}/auth/google-sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+    });
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to sync Google user');
+    }
+    return await response.json();
+};
 
 /**
  * Auth: Register a new user

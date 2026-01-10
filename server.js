@@ -117,6 +117,31 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+app.post('/api/auth/google-sync', async (req, res) => {
+    const { email } = req.body;
+    try {
+        console.log(`[Auth] Google Sync for: ${email}`);
+        // Check if user exists
+        let result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+
+        if (result.rows.length === 0) {
+            // Auto-register google user
+            result = await pool.query(
+                'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, encrypted_gemini_key',
+                [email, 'OAUTH_USER'] // Dummy hash for OAuth users
+            );
+            console.log(`[Auth] Created new record for Google user: ${email}`);
+        }
+
+        const user = result.rows[0];
+        const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '24h' });
+        res.json({ token, email: user.email, hasKey: !!user.encrypted_gemini_key });
+    } catch (err) {
+        console.error('[Auth Error] Google Sync failed:', err);
+        res.status(500).json({ error: 'Google sync failed' });
+    }
+});
+
 app.post('/api/user/key', authenticateToken, async (req, res) => {
     const { geminiKey } = req.body;
     try {
