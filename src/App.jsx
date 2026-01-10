@@ -36,8 +36,11 @@ const App = () => {
 
         // 2. Listen for Auth Changes (Handles Google OAuth Redirects & Logins)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            // Only sync if we have a user and we don't already have a local token
+            // event === 'INITIAL_SESSION' happens on page load if a cookie exists
+            // event === 'SIGNED_IN' happens after redirect
             if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user && !token) {
-                console.log('[Auth] Google Session detected, syncing...');
+                console.log(`[Auth] Google Session detected (${event}), syncing...`);
                 try {
                     const data = await syncGoogleUser(session.user.email);
                     localStorage.setItem('token', data.token);
@@ -45,6 +48,7 @@ const App = () => {
                     setHasKey(data.hasKey);
                     setIsAuthOpen(false);
                 } catch (err) {
+                    console.error('[Auth] Sync error:', err);
                     setError('Failed to sync Google account');
                 }
             }
@@ -93,10 +97,18 @@ const App = () => {
     };
 
     const handleLogout = async () => {
+        // Clear local state FIRST to stop the UI from reloading auth
         localStorage.removeItem('token');
-        await supabase.auth.signOut();
         setToken(null);
         setUser(null);
+
+        // Then tell Supabase to sign out (clears cookies/session)
+        try {
+            await supabase.auth.signOut();
+        } catch (e) {
+            console.error('[Auth] SignOut error:', e);
+        }
+
         setIsAuthOpen(true);
         setStep('upload');
         setImages([]);
